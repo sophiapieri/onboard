@@ -1,6 +1,6 @@
 // SerpAPI shopping helper that turns style queries into product cards.
 
-import type { ClothingCategory, Product, StoreOffer } from '@/types';
+import type { ClothingCategory, Gender, Product, StoreOffer } from '@/types';
 
 function inferCategory(query: string): ClothingCategory {
   const normalized = query.toLowerCase();
@@ -25,32 +25,38 @@ function parsePrice(value: unknown): number {
   return 0;
 }
 
-export async function searchProducts(searchQuery: string): Promise<Product[]> {
+export async function searchProducts(searchQuery: string, gender: Gender = 'women'): Promise<Product[]> {
   const apiKey = process.env.SERPAPI_KEY;
   if (!apiKey) {
     throw new Error('Missing SERPAPI_KEY');
   }
 
+  const genderSuffix = gender === 'men' ? "men's clothing" : gender === 'unisex' ? 'unisex clothing' : "women's clothing";
+  const enrichedQuery = `${searchQuery} ${genderSuffix}`.trim();
+
   const url = new URL('https://serpapi.com/search.json');
   url.searchParams.set('engine', 'google_shopping');
-  url.searchParams.set('q', searchQuery);
+  url.searchParams.set('q', enrichedQuery);
   url.searchParams.set('api_key', apiKey);
 
-  console.log('SerpAPI request:', { query: searchQuery, url: url.toString() });
+  console.log('SerpAPI request:', { query: enrichedQuery, url: url.toString() });
   const response = await fetch(url.toString());
   const payload = (await response.json()) as Record<string, unknown>;
   console.log('SerpAPI raw response:', payload);
 
   const shoppingResults = Array.isArray(payload.shopping_results) ? payload.shopping_results : [];
   if (!shoppingResults.length) {
-    console.warn('SerpAPI returned no shopping_results for query:', searchQuery, payload);
+    console.warn('SerpAPI returned no shopping_results for query:', enrichedQuery, payload);
     return [];
   }
 
-  const firstResult = shoppingResults[0] as Record<string, unknown>;
-  console.log('SerpAPI first result:', firstResult);
+  const blockedTerms = ['moisturizer', 'lotion', 'cream', 'furniture', 'costume', 'cosplay', 'decor', 'supplement', 'vitamin', 'rug', 'pillow', 'candle'];
 
   return (shoppingResults as Array<Record<string, unknown>>)
+    .filter((result) => {
+      const title = typeof result.title === 'string' ? result.title.toLowerCase() : '';
+      return !blockedTerms.some((term) => title.includes(term));
+    })
     .slice(0, 6)
     .map((result, index) => {
       const price = parsePrice(result.price);
@@ -64,12 +70,13 @@ export async function searchProducts(searchQuery: string): Promise<Product[]> {
       };
 
       return {
-        id: `${searchQuery}-${index}`,
-        title: typeof result.title === 'string' ? result.title : searchQuery,
+        id: `${enrichedQuery}-${index}`,
+        title: typeof result.title === 'string' ? result.title : enrichedQuery,
         image: typeof result.thumbnail === 'string' ? result.thumbnail : 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80',
         price,
         rating: typeof result.rating === 'number' ? result.rating : 4.2,
-        category: inferCategory(searchQuery),
+        category: inferCategory(enrichedQuery),
+        gender,
         stores: [storeOffer],
         isSaved: false,
       } satisfies Product;

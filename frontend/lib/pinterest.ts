@@ -7,6 +7,14 @@ export interface PinterestPin {
   description: string;
 }
 
+function upgradePinterestImageUrl(url: string): string {
+  return url
+    .replace(/\/236x\//i, '/736x/')
+    .replace(/236x\//i, '736x/')
+    .replace(/\/236x/i, '/736x')
+    .replace(/236x/i, '736x');
+}
+
 function extractText(value: unknown): string {
   if (typeof value === 'string') {
     return value;
@@ -94,7 +102,7 @@ export async function fetchPinterestPins(pinterestUrl: string): Promise<Pinteres
     .map((item) => {
       const description = extractText(item.description ?? '');
       const imageUrl = extractImageUrl(item);
-      return imageUrl ? { imageUrl, description } : null;
+      return imageUrl ? { imageUrl: upgradePinterestImageUrl(imageUrl), description } : null;
     })
     .filter((entry): entry is PinterestPin => Boolean(entry))
     .slice(0, 20);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { ClothingCategory, FilterOption, Product } from '@/types';
+import type { ClothingCategory, FilterOption, Gender, Product } from '@/types';
 
 interface FilterBarProps {
   products: Product[];
@@ -16,6 +16,7 @@ const priceOptions = [
 ] as const;
 
 const categoryOptions: ClothingCategory[] = ['tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'accessories'];
+const genderOptions: Gender[] = ['women', 'men', 'unisex'];
 const categoryLabels: Record<ClothingCategory, string> = {
   tops: 'Tops',
   bottoms: 'Bottoms',
@@ -47,6 +48,8 @@ export default function FilterBar({ products, onFilteredProductsChange }: Filter
             return product.price <= filter.max;
           case 'category':
             return product.category === filter.value;
+          case 'gender':
+            return !product.gender || product.gender === filter.value;
           case 'freeShipping':
             return product.stores.some((store) => store.freeShipping);
           case 'rating':
@@ -69,6 +72,10 @@ export default function FilterBar({ products, onFilteredProductsChange }: Filter
           return item.type === 'category' && item.value === filter.value;
         }
 
+        if (filter.type === 'gender') {
+          return item.type === 'gender' && item.value === filter.value;
+        }
+
         return item.type === filter.type;
       });
 
@@ -76,6 +83,10 @@ export default function FilterBar({ products, onFilteredProductsChange }: Filter
         return current.filter((item) => {
           if (filter.type === 'category') {
             return !(item.type === 'category' && item.value === filter.value);
+          }
+
+          if (filter.type === 'gender') {
+            return !(item.type === 'gender' && item.value === filter.value);
           }
 
           return item.type !== filter.type;
@@ -122,6 +133,24 @@ export default function FilterBar({ products, onFilteredProductsChange }: Filter
                 }`}
               >
                 {categoryLabels[option]}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {genderOptions.map((option) => {
+            const isActive = filters.some((filter) => filter.type === 'gender' && filter.value === option);
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => toggleFilter({ type: 'gender', value: option })}
+                className={`rounded-full px-3 py-2 text-sm transition ${
+                  isActive ? 'bg-navy text-white' : 'border border-navy bg-white text-navy'
+                }`}
+              >
+                {option === 'women' ? 'Women' : option === 'men' ? 'Men' : 'Unisex'}
               </button>
             );
           })}

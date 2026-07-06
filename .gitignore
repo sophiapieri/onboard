@@ -6,6 +6,9 @@
 # Project spec / local notes
 AGENTS.md
 
+# Local-only assets
+/docs/Headshot.png
+
 # Dependencies
 node_modules/
 

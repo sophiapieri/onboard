@@ -6,7 +6,7 @@ import { AuthContext } from '@/components/AuthProvider';
 import { createBoardPage } from '@/lib/firestore';
 import { useGuestSession } from '@/lib/hooks/useGuestSession';
 import LoadingScreen from '@/components/ui/LoadingScreen';
-import type { BoardPage } from '@/types';
+import type { BoardPage, PreferredGender } from '@/types';
 
 interface AddPageModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ export default function AddPageModal({ isOpen, onClose, onBoardCreated }: AddPag
   const { saveGuestBoard } = useGuestSession();
   const [pinterestUrl, setPinterestUrl] = useState('');
   const [pageName, setPageName] = useState('');
+  const [selectedGender, setSelectedGender] = useState<PreferredGender>('women');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,6 +51,7 @@ export default function AddPageModal({ isOpen, onClose, onBoardCreated }: AddPag
         body: JSON.stringify({
           pinterestUrl: pinterestUrl.trim(),
           pageName: pageName.trim(),
+          gender: selectedGender,
           ...(auth?.user && !auth.isGuest ? { userId: auth.user.uid } : {}),
         }),
       });
@@ -125,6 +127,27 @@ export default function AddPageModal({ isOpen, onClose, onBoardCreated }: AddPag
                 className="w-full rounded-xl border border-sky/70 bg-sand px-4 py-3 text-sm outline-none focus:border-navy"
                 placeholder="Coastal Grandma Winter"
               />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-navy">Preferred gender</label>
+              <div className="flex flex-wrap gap-2">
+                {(['women', 'men'] as PreferredGender[]).map((value) => {
+                  const active = selectedGender === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSelectedGender(value)}
+                      className={`rounded-full px-3 py-2 text-sm transition ${
+                        active ? 'bg-navy text-white' : 'border border-navy bg-white text-navy'
+                      }`}
+                    >
+                      {value === 'women' ? 'Women' : 'Men'}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}

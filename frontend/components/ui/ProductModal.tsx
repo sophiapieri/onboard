@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, type MouseEvent } from 'react';
 import HeartButton from '@/components/ui/HeartButton';
 import type { Product, StoreOffer } from '@/types';
 
@@ -9,6 +9,43 @@ interface ProductModalProps {
   onClose: () => void;
   onToggleSaved?: () => void;
   boardId: string;
+}
+
+function normalizeStoreUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim();
+  if (!trimmed || trimmed === '#') {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith('//')) {
+    return `https:${trimmed}`;
+  }
+
+  if (trimmed.startsWith('www.')) {
+    return `https://${trimmed}`;
+  }
+
+  if (/^[a-z][a-z\d+.-]*:/i.test(trimmed)) {
+    return '';
+  }
+
+  return `https://${trimmed}`;
+}
+
+function handleShopNowClick(event: MouseEvent<HTMLAnchorElement>, rawUrl: string) {
+  const normalizedUrl = normalizeStoreUrl(rawUrl);
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!normalizedUrl) {
+    return;
+  }
+
+  window.open(normalizedUrl, '_blank', 'noopener,noreferrer');
 }
 
 export default function ProductModal({ product, onClose, onToggleSaved, boardId }: ProductModalProps) {
@@ -82,7 +119,13 @@ export default function ProductModal({ product, onClose, onToggleSaved, boardId 
                         <span className="rounded-full bg-sky/80 px-3 py-1 text-xs font-semibold text-navy">Free over ${store.freeShippingThreshold}</span>
                       ) : null}
                     </div>
-                    <a href={store.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center text-sm font-semibold text-navy">
+                    <a
+                      href={normalizeStoreUrl(store.url) || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => handleShopNowClick(event, store.url)}
+                      className="mt-4 inline-flex items-center text-sm font-semibold text-navy"
+                    >
                       Shop Now →
                     </a>
                   </div>
