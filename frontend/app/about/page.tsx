@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import headshot from '../../../docs/Headshot.png';
+
+const headshotSrc = '/headshot-fallback.svg';
 
 export default function AboutPage() {
   const founderName = 'Sophia Pieri';
@@ -31,7 +32,7 @@ export default function AboutPage() {
             <h2 className="font-display text-2xl text-navy">Meet the founder</h2>
             <div className="mt-6 flex flex-col gap-4">
               <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-sky/70 bg-sky/70">
-                <Image src={headshot} alt={founderName} width={80} height={80} className="h-full w-full object-cover" />
+                <Image src={headshotSrc} alt={founderName} width={80} height={80} className="h-full w-full object-cover" />
               </div>
               <div>
                 <h3 className="font-display text-xl text-navy">{founderName}</h3>
