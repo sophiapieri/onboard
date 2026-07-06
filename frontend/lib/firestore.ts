@@ -217,9 +217,18 @@ export async function deleteBoardPage(userId: string, pageId: string): Promise<v
   if (!db) {
     const boards = readStoredBoards(userId).filter((board) => board.id !== pageId);
     writeStoredBoards(userId, boards);
+    const savedItems = readStoredSavedItems(userId).filter((item) => item.boardId !== pageId);
+    writeStoredSavedItems(userId, savedItems);
     return;
   }
 
+  const savedItemsSnapshot = await getDocs(collection(db, 'users', userId, 'savedItems'));
+  const matchingSavedItems = savedItemsSnapshot.docs.filter((savedDoc) => {
+    const data = savedDoc.data() as { boardId?: string };
+    return data.boardId === pageId;
+  });
+
+  await Promise.all(matchingSavedItems.map((savedDoc) => deleteDoc(savedDoc.ref)));
   await deleteDoc(doc(db, 'users', userId, 'pages', pageId));
 }
 

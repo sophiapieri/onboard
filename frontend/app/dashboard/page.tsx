@@ -6,9 +6,12 @@ import AddPageModal from '@/components/ui/AddPageModal';
 import Sidebar from '@/components/ui/Sidebar';
 import { AuthContext } from '@/components/AuthProvider';
 import { createBoardPage, deleteBoardPage, getBoardPages, importGuestBoard } from '@/lib/firestore';
-import type { BoardPage, Product } from '@/types';
+import type { BoardPage, PreferredGender, Product } from '@/types';
 
-const aestheticPills = ['Coastal Grandma', 'Dark Academia', 'Clean Girl', 'Quiet Luxury', 'Y2K Revival', 'Cottagecore'];
+const aestheticPillsByGender: Record<PreferredGender, string[]> = {
+  women: ['Coastal Grandma', 'Dark Academia', 'Clean Girl', 'Quiet Luxury', 'Y2K Revival', 'Cottagecore'],
+  men: ['Streetwear', 'Tailored', 'Old Money', 'Minimalist', 'Workwear', 'Quiet Luxury'],
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,6 +19,7 @@ export default function DashboardPage() {
   const [boards, setBoards] = useState<BoardPage[]>([]);
   const [isBoardsLoading, setIsBoardsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<PreferredGender>('women');
   const [unsavedGuestBoards, setUnsavedGuestBoards] = useState<BoardPage[]>([]);
   const [isImportingBoards, setIsImportingBoards] = useState(false);
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
@@ -104,7 +108,7 @@ export default function DashboardPage() {
     const response = await fetch('/api/search-products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ searchQuery: aesthetic }),
+      body: JSON.stringify({ searchQuery: aesthetic, gender: selectedGender }),
     });
 
     const products = (await response.json()) as Product[];
@@ -113,6 +117,7 @@ export default function DashboardPage() {
       name: `${aesthetic} Board`,
       pinterestUrl: 'https://www.pinterest.com',
       aestheticLabels: [aesthetic],
+      preferredGender: selectedGender,
       createdAt: new Date(),
       products,
     };
@@ -239,9 +244,26 @@ export default function DashboardPage() {
           </section>
 
           <section className="mt-8 rounded-[28px] border border-sky/60 bg-white p-6 shadow-[0_18px_55px_-24px_rgba(0,28,87,0.32)]">
-            <h2 className="mb-4 font-display text-2xl text-navy">Popular Aesthetics</h2>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-2xl text-navy">Popular Aesthetics</h2>
+              <div className="flex flex-wrap gap-2">
+                {(['women', 'men'] as PreferredGender[]).map((value) => {
+                  const active = selectedGender === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSelectedGender(value)}
+                      className={`rounded-full px-3 py-2 text-sm transition ${active ? 'bg-navy text-white' : 'border border-navy bg-white text-navy'}`}
+                    >
+                      {value === 'women' ? 'Women' : 'Men'}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-3">
-              {aestheticPills.map((pill) => (
+              {aestheticPillsByGender[selectedGender].map((pill) => (
                 <button
                   key={pill}
                   type="button"

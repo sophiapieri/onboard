@@ -1,5 +1,8 @@
 // Shared TypeScript interfaces and unions for the OnBoard app.
 
+export type Gender = 'women' | 'men' | 'unisex';
+export type PreferredGender = 'women' | 'men';
+
 export interface User {
   uid: string;
   email: string;
@@ -17,6 +20,7 @@ export interface BoardPage {
   name: string;
   pinterestUrl: string;
   aestheticLabels: string[];
+  preferredGender?: PreferredGender;
   createdAt: Date;
   products: Product[];
 }
@@ -28,6 +32,7 @@ export interface Product {
   price: number;
   rating: number;
   category: ClothingCategory;
+  gender: Gender;
   stores: StoreOffer[];
   isSaved: boolean;
 }
@@ -52,5 +57,6 @@ export type ClothingCategory =
 export type FilterOption =
   | { type: 'price'; max: number }
   | { type: 'category'; value: ClothingCategory }
+  | { type: 'gender'; value: Gender }
   | { type: 'freeShipping' }
   | { type: 'rating'; min: number };
